@@ -1,5 +1,5 @@
 #!/sbin/sh
-# prepdecrypt.sh — signal crypto readiness after trusty modules load
+# prepdecrypt.sh - signal crypto readiness after trusty modules load
 #
 # The keymint/gatekeeper HALs depend on the trusty IPC kernel modules
 # (trusty.ko, trusty-ipc.ko) which TWRP loads via TW_LOAD_VENDOR_BOOT_MODULES.
