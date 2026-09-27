@@ -1,8 +1,8 @@
-# Recovery init for Nubia V80 Max (Z2577) — ro.hardware=ums9230_6h10
+# Recovery init for Nubia V80 Max (Z2577) - ro.hardware=ums9230_6h10
 import /init.recovery.common.rc
 
-# FBE decryption via trusty (keymint 2.0 + gatekeeper 1.0, stock prebuilts)
-# Services start ONLY after trusty modules load (vendor.sys.listener.registered=true)
+# FBE decrypt: prepdecrypt waits for /dev/trusty-ipc* then sets crypto.ready
+# keystore2 + boot-hal come from TWRP's own ramdisk rc files, not here
 on fs
     start prepdecrypt
 
@@ -11,13 +11,6 @@ service prepdecrypt /system/bin/prepdecrypt.sh
     disabled
     user root
     group root
-    seclabel u:r:recovery:s0
-
-service keystore2 /system/bin/keystore2 /data/misc/keystore
-    class main
-    user root
-    group root
-    disabled
     seclabel u:r:recovery:s0
 
 service keymint-2-0 /system/bin/android.hardware.security.keymint@2.0-unisoc.service.trusty
@@ -34,31 +27,13 @@ service gatekeeper-1-0 /system/bin/android.hardware.gatekeeper@1.0-service.trust
     disabled
     seclabel u:r:recovery:s0
 
-service boot-hal-1-2 /system/bin/android.hardware.boot@1.2-service
-    user root
-    group root
-    disabled
-    seclabel u:r:recovery:s0
-
-# Trusty modules load late (TW_LOAD_VENDOR_BOOT_MODULES). Don't start
-# keymint/gatekeeper until the trusty IPC driver is registered.
-on property:vendor.sys.listener.registered=true
-    start keymint-2-0
-    start gatekeeper-1-0
-    start boot-hal-1-2
-
-on property:crypto.ready=1 && property:ro.crypto.state=encrypted
-    start keymint-2-0
-    start gatekeeper-1-0
-
-on property:crypto.ready=1 && property:hwservicemanager.ready=true
+on property:crypto.ready=1
     start keymint-2-0
     start gatekeeper-1-0
 
 on property:ro.crypto.state=unsupported || property:ro.crypto.state=unencrypted || property:twrp.decrypt.done=true
     stop keymint-2-0
     stop gatekeeper-1-0
-    stop boot-hal-1-2
 
 on boot
     start health-hal-2-1
